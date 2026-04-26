@@ -9,7 +9,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Download CEF (Windows)
       run: |
         Invoke-WebRequest -Uri "https://cef-builds.spotifycdn.com/cef_binary_147.0.10%2Bgd58e84d%2Bchromium-147.0.7727.118_windows64_minimal.tar.bz2" -OutFile cef_windows.tar.bz2
@@ -28,7 +28,7 @@ jobs:
         cp -r cef/Resources/* hqxball-windows/
         cp -r assets hqxball-windows/
     - name: Upload
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Hqxball-Windows
         path: hqxball-windows/
@@ -36,7 +36,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install Dependencies
       run: |
         sudo apt-get update
@@ -58,7 +58,7 @@ jobs:
         cp -r cef/Resources/* hqxball-linux/
         cp -r assets hqxball-linux/
     - name: Upload
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Hqxball-Linux
         path: hqxball-linux/
@@ -66,7 +66,7 @@ jobs:
   build-mac:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Download CEF (Mac ARM64)
       run: |
         curl -L "https://cef-builds.spotifycdn.com/cef_binary_147.0.10%2Bgd58e84d%2Bchromium-147.0.7727.118_macosarm64_minimal.tar.bz2" -o cef_mac.tar.bz2
@@ -84,7 +84,7 @@ jobs:
         cp -r cef/Resources/* hqxball-mac/ || true
         cp -r assets hqxball-mac/ || true
     - name: Upload
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Hqxball-Mac
         path: hqxball-mac/
