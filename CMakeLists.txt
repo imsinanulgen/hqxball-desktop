@@ -3,6 +3,11 @@ project(hqxball_client)
 
 set(CMAKE_CXX_STANDARD 20)
 
+# Ensure MSVC uses the static runtime library (/MT) to match CEF's default configuration
+if(WIN32)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 # Point to the downloaded CEF binary directory
 set(CEF_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/cef")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CEF_ROOT}/cmake")
