@@ -42,10 +42,12 @@ target_include_directories(hqxball_client PRIVATE ${CEF_ROOT})
 if(APPLE)
     add_custom_command(
         TARGET hqxball_client POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks/Hqxball Helper.app/Contents/MacOS"
         COMMAND ditto
             "${CEF_ROOT}/Release/Chromium Embedded Framework.framework"
             "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks/Chromium Embedded Framework.framework"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:hqxball_client>/../Info.plist" "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks/Hqxball Helper.app/Contents/Info.plist"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:hqxball_client>/hqxball_client" "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks/Hqxball Helper.app/Contents/MacOS/Hqxball Helper"
     )
 else()
     add_custom_command(

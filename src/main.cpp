@@ -288,19 +288,10 @@ int main(int argc, char *argv[]) {
   settings.no_sandbox = true; // Required for simple Linux/Windows setups
 
 #if defined(__APPLE__)
-  // Helper App olmadan tek bir executable üzerinden render etmesini sağlıyoruz (Mac App Mimarisi Çökme Çözümü)
-  CefString(&settings.browser_subprocess_path).FromASCII(argv[0]);
+  // CMake üzerinden Helper App oluşturulacağı için manuel sub_process kaldırıldı
 #endif
 
 #if !defined(_WIN32) && !defined(__APPLE__)
-  // Explicitly set paths to avoid ICU and cache errors on Linux
-  char abs_path[4096];
-  if (realpath(".", abs_path) != nullptr) {
-      std::string base_dir(abs_path);
-      CefString(&settings.resources_dir_path).FromASCII(base_dir.c_str());
-      CefString(&settings.locales_dir_path).FromASCII((base_dir + "/locales").c_str());
-      CefString(&settings.root_cache_path).FromASCII((base_dir + "/cache").c_str());
-  }
   settings.multi_threaded_message_loop = false;
 #elif defined(_WIN32)
   settings.multi_threaded_message_loop = true;
