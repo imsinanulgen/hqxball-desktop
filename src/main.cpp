@@ -257,23 +257,27 @@ public:
   IMPLEMENT_REFCOUNTING(SimpleApp);
 };
 
+#if defined(_WIN32)
+#include <windows.h>
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow) {
+  CefMainArgs main_args(hInstance);
+#else
 int main(int argc, char *argv[]) {
   CefMainArgs main_args(argc, argv);
+#endif
 
   CefRefPtr<SimpleApp> app(new SimpleApp);
 
-  // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
-  // that share the same executable. This function checks the command-line and,
-  // if this is a sub-process, executes the appropriate logic.
   int exit_code = CefExecuteProcess(main_args, app, nullptr);
   if (exit_code >= 0) {
     return exit_code;
   }
 
   CefSettings settings;
-  settings.no_sandbox = true; // Required for simple Linux setups
+  settings.no_sandbox = true; // Required for simple Linux/Windows setups
 
-  // Explicitly set paths to avoid ICU and cache errors
+#if !defined(_WIN32) && !defined(__APPLE__)
+  // Explicitly set paths to avoid ICU and cache errors on Linux
   char abs_path[4096];
   if (realpath(".", abs_path) != nullptr) {
       std::string base_dir(abs_path);
@@ -281,16 +285,15 @@ int main(int argc, char *argv[]) {
       CefString(&settings.locales_dir_path).FromASCII((base_dir + "/locales").c_str());
       CefString(&settings.root_cache_path).FromASCII((base_dir + "/cache").c_str());
   }
-
-  // Enable multi-threaded message loop for better performance if supported,
-  // but on Linux standard message loop is typically required for Views.
   settings.multi_threaded_message_loop = false;
+#else
+  settings.multi_threaded_message_loop = true;
+#endif
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app, nullptr);
 
-  // Run the CEF message loop. This will block until CefQuitMessageLoop() is
-  // called.
+  // Run the CEF message loop.
   CefRunMessageLoop();
 
   // Shut down CEF.
