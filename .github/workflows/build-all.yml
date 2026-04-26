@@ -81,9 +81,17 @@ jobs:
     - name: Package
       run: |
         mkdir hqxball-mac
-        cp -r build/hqxball_client.app hqxball-mac/Hqxball.app
+        ditto build/hqxball_client.app hqxball-mac/Hqxball.app
+        # Remove quarantine flag just in case
+        xattr -cr hqxball-mac/Hqxball.app || true
+        # Ad-hoc sign the entire application bundle (required for Apple Silicon and to prevent damaged error)
+        codesign --force --deep --sign - hqxball-mac/Hqxball.app
+        # Zip natively on macOS to perfectly preserve symlinks
+        cd hqxball-mac
+        ditto -c -k --sequesterRsrc --keepParent Hqxball.app Hqxball-Mac.zip
+        rm -rf Hqxball.app
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
         name: Hqxball-Mac
-        path: hqxball-mac/
+        path: hqxball-mac/Hqxball-Mac.zip
