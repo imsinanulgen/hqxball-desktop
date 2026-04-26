@@ -183,7 +183,7 @@ public:
       : browser_view_(browser_view) {}
 
   void OnWindowCreated(CefRefPtr<CefWindow> window) override {
-    window->SetTitle("Hqxball Desktop Client - Maximum Performance");
+    window->SetTitle("Hqxball Desktop Client");
 
     // Load and set the application icon
     CefRefPtr<CefImage> icon = LoadIcon("assets/icon.png");

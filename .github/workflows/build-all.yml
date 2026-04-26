@@ -8,14 +8,16 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
     steps:
     - uses: actions/checkout@v4
     - name: Download CEF (Windows)
       run: |
-        Invoke-WebRequest -Uri "https://cef-builds.spotifycdn.com/cef_binary_147.0.10%2Bgd58e84d%2Bchromium-147.0.7727.118_windows64_minimal.tar.bz2" -OutFile cef_windows.tar.bz2
-        7z x cef_windows.tar.bz2
-        7z x cef_windows.tar
-        Rename-Item -Path "cef_binary_147.0.10+gd58e84d+chromium-147.0.7727.118_windows64_minimal" -NewName "cef"
+        curl -L "https://cef-builds.spotifycdn.com/cef_binary_147.0.10%2Bgd58e84d%2Bchromium-147.0.7727.118_windows64_minimal.tar.bz2" -o cef_windows.tar.bz2
+        tar xf cef_windows.tar.bz2
+        mv cef_binary_147.0.10+gd58e84d+chromium-147.0.7727.118_windows64_minimal cef
     - name: Configure CMake
       run: cmake -S . -B build
     - name: Build
@@ -34,7 +36,7 @@ jobs:
         path: hqxball-windows/
 
   build-linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v4
     - name: Install Dependencies
@@ -79,10 +81,7 @@ jobs:
     - name: Package
       run: |
         mkdir hqxball-mac
-        cp build/hqxball_client hqxball-mac/ || true
-        cp -r cef/Release/* hqxball-mac/ || true
-        cp -r cef/Resources/* hqxball-mac/ || true
-        cp -r assets hqxball-mac/ || true
+        cp -r build/hqxball_client.app hqxball-mac/Hqxball.app
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
