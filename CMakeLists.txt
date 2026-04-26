@@ -38,9 +38,9 @@ if(APPLE)
     add_custom_command(
         TARGET hqxball_client POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        COMMAND cp -R
             "${CEF_ROOT}/Release/Chromium Embedded Framework.framework"
-            "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks/Chromium Embedded Framework.framework"
+            "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks/"
     )
 else()
     add_custom_command(
