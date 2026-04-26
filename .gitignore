@@ -1,0 +1,13 @@
+# Derleme çıktıları
+build/
+.cache/
+
+# CEF Binary dosyaları (Çok büyük olduğu için GitHub'a atılmaz)
+cef/
+
+# IDE ve OS dosyaları
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
