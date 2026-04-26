@@ -1,0 +1,90 @@
+name: Multi-Platform Build
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Download CEF (Windows)
+      run: |
+        Invoke-WebRequest -Uri "https://cef-builds.spotifycdn.com/cef_binary_147.0.10%2Bgd58e84d%2Bchromium-147.0.7727.118_windows64_minimal.tar.bz2" -OutFile cef_windows.tar.bz2
+        7z x cef_windows.tar.bz2
+        7z x cef_windows.tar
+        Rename-Item -Path "cef_binary_147.0.10+gd58e84d+chromium-147.0.7727.118_windows64_minimal" -NewName "cef"
+    - name: Configure CMake
+      run: cmake -S . -B build
+    - name: Build
+      run: cmake --build build --config Release
+    - name: Package
+      run: |
+        mkdir hqxball-windows
+        cp build/Release/hqxball_client.exe hqxball-windows/
+        cp -r cef/Release/* hqxball-windows/
+        cp -r cef/Resources/* hqxball-windows/
+        cp -r assets hqxball-windows/
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: Hqxball-Windows
+        path: hqxball-windows/
+
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential libglib2.0-dev libgtk-3-dev
+    - name: Download CEF (Linux)
+      run: |
+        wget "https://cef-builds.spotifycdn.com/cef_binary_147.0.10%2Bgd58e84d%2Bchromium-147.0.7727.118_linux64_minimal.tar.bz2" -O cef_linux.tar.bz2
+        tar xf cef_linux.tar.bz2
+        mv cef_binary_147.0.10+gd58e84d+chromium-147.0.7727.118_linux64_minimal cef
+    - name: Configure CMake
+      run: cmake -S . -B build
+    - name: Build
+      run: cmake --build build --config Release
+    - name: Package
+      run: |
+        mkdir hqxball-linux
+        cp build/hqxball_client hqxball-linux/
+        cp -r cef/Release/* hqxball-linux/
+        cp -r cef/Resources/* hqxball-linux/
+        cp -r assets hqxball-linux/
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: Hqxball-Linux
+        path: hqxball-linux/
+
+  build-mac:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Download CEF (Mac ARM64)
+      run: |
+        curl -L "https://cef-builds.spotifycdn.com/cef_binary_147.0.10%2Bgd58e84d%2Bchromium-147.0.7727.118_macosarm64_minimal.tar.bz2" -o cef_mac.tar.bz2
+        tar xf cef_mac.tar.bz2
+        mv cef_binary_147.0.10+gd58e84d+chromium-147.0.7727.118_macosarm64_minimal cef
+    - name: Configure CMake
+      run: cmake -S . -B build
+    - name: Build
+      run: cmake --build build --config Release
+    - name: Package
+      run: |
+        mkdir hqxball-mac
+        cp build/hqxball_client hqxball-mac/ || true
+        cp -r cef/Release/* hqxball-mac/ || true
+        cp -r cef/Resources/* hqxball-mac/ || true
+        cp -r assets hqxball-mac/ || true
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: Hqxball-Mac
+        path: hqxball-mac/
