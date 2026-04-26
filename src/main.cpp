@@ -12,6 +12,10 @@
 #include <vector>
 #include <stdlib.h>
 
+#if defined(__APPLE__)
+#include "include/wrapper/cef_library_loader.h"
+#endif
+
 // Helper function to load a PNG image as a CefImage
 CefRefPtr<CefImage> LoadIcon(const std::string& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -266,6 +270,13 @@ int main(int argc, char *argv[]) {
   CefMainArgs main_args(argc, argv);
 #endif
 
+#if defined(__APPLE__)
+  CefScopedLibraryLoader library_loader;
+  if (!library_loader.LoadInMain()) {
+    return 1;
+  }
+#endif
+
   CefRefPtr<SimpleApp> app(new SimpleApp);
 
   int exit_code = CefExecuteProcess(main_args, app, nullptr);
@@ -286,8 +297,10 @@ int main(int argc, char *argv[]) {
       CefString(&settings.root_cache_path).FromASCII((base_dir + "/cache").c_str());
   }
   settings.multi_threaded_message_loop = false;
-#else
+#elif defined(_WIN32)
   settings.multi_threaded_message_loop = true;
+#else
+  settings.multi_threaded_message_loop = false;
 #endif
 
   // Initialize CEF.
