@@ -40,13 +40,30 @@ target_include_directories(hqxball_client PRIVATE ${CEF_ROOT})
 
 # Copy CEF files to the executable directory
 if(APPLE)
+    file(WRITE "${CMAKE_BINARY_DIR}/helper_Info.plist" "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.hqxball.helper</string>
+    <key>CFBundleName</key>
+    <string>Hqxball Helper</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+</dict>
+</plist>")
+
     add_custom_command(
         TARGET hqxball_client POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks/Hqxball Helper.app/Contents/MacOS"
         COMMAND ditto
             "${CEF_ROOT}/Release/Chromium Embedded Framework.framework"
             "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks/Chromium Embedded Framework.framework"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:hqxball_client>/../Info.plist" "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks/Hqxball Helper.app/Contents/Info.plist"
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/helper_Info.plist" "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks/Hqxball Helper.app/Contents/Info.plist"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:hqxball_client>/hqxball_client" "$<TARGET_FILE_DIR:hqxball_client>/../Frameworks/Hqxball Helper.app/Contents/MacOS/Hqxball Helper"
     )
 else()
