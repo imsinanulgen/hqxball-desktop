@@ -1,0 +1,45 @@
+name: Linux Build
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential libglib2.0-dev libgtk-3-dev
+        
+    - name: Download CEF for Linux (64-bit)
+      run: |
+        wget "https://cef-builds.spotifycdn.com/cef_binary_147.0.10%2Bgd58e84d%2Bchromium-147.0.7727.118_linux64_minimal.tar.bz2" -O cef_linux.tar.bz2
+        tar xf cef_linux.tar.bz2
+        mv cef_binary_147.0.10+gd58e84d+chromium-147.0.7727.118_linux64_minimal cef
+
+    - name: Configure CMake
+      run: cmake -S . -B build
+
+    - name: Build Project
+      run: cmake --build build --config Release
+
+    - name: Package Linux Release
+      run: |
+        mkdir hqxball-linux
+        cp build/hqxball_client hqxball-linux/
+        cp -r cef/Release/* hqxball-linux/
+        cp -r cef/Resources/* hqxball-linux/
+        cp -r assets hqxball-linux/
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Hqxball-Linux-App
+        path: hqxball-linux/
