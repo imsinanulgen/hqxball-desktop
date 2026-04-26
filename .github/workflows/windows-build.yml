@@ -1,0 +1,41 @@
+name: Windows Build
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Download CEF for Windows (64-bit)
+      run: |
+        Invoke-WebRequest -Uri "https://cef-builds.spotifycdn.com/cef_binary_147.0.10%2Bgd58e84d%2Bchromium-147.0.7727.118_windows64_minimal.tar.bz2" -OutFile cef_windows.tar.bz2
+        7z x cef_windows.tar.bz2
+        7z x cef_windows.tar
+        Rename-Item -Path "cef_binary_147.0.10+gd58e84d+chromium-147.0.7727.118_windows64_minimal" -NewName "cef"
+
+    - name: Configure CMake
+      run: cmake -S . -B build
+
+    - name: Build Project
+      run: cmake --build build --config Release
+
+    - name: Package Windows Release
+      run: |
+        mkdir hqxball-windows
+        cp build/Release/hqxball_client.exe hqxball-windows/
+        cp -r cef/Release/* hqxball-windows/
+        cp -r cef/Resources/* hqxball-windows/
+        cp -r assets hqxball-windows/
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Hqxball-Windows-App
+        path: hqxball-windows/

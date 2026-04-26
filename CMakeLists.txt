@@ -11,9 +11,11 @@ find_package(CEF REQUIRED)
 
 add_subdirectory(${CEF_ROOT}/libcef_dll libcef_dll_wrapper)
 
-add_executable(hqxball_client
-    src/main.cpp
-)
+if(WIN32)
+    add_executable(hqxball_client WIN32 src/main.cpp)
+else()
+    add_executable(hqxball_client src/main.cpp)
+endif()
 
 target_link_libraries(hqxball_client PRIVATE libcef_dll_wrapper ${CEF_STANDARD_LIBS} ${CEF_LIB_RELEASE})
 target_compile_definitions(hqxball_client PRIVATE ${CEF_COMPILER_DEFINES})
