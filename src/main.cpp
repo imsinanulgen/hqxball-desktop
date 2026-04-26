@@ -6,9 +6,11 @@
 #include "include/views/cef_window_delegate.h"
 #include "include/cef_context_menu_handler.h"
 #include "include/cef_keyboard_handler.h"
+#include "include/cef_load_handler.h"
 #include "include/cef_image.h"
 #include <fstream>
 #include <vector>
+#include <stdlib.h>
 
 // Helper function to load a PNG image as a CefImage
 CefRefPtr<CefImage> LoadIcon(const std::string& path) {
@@ -31,7 +33,8 @@ CefRefPtr<CefImage> LoadIcon(const std::string& path) {
 class SimpleClient : public CefClient,
                      public CefLifeSpanHandler,
                      public CefContextMenuHandler,
-                     public CefKeyboardHandler {
+                     public CefKeyboardHandler,
+                     public CefLoadHandler {
 public:
   SimpleClient() {}
 
@@ -45,6 +48,100 @@ public:
 
   virtual CefRefPtr<CefKeyboardHandler> GetKeyboardHandler() override {
     return this;
+  }
+
+  virtual CefRefPtr<CefLoadHandler> GetLoadHandler() override {
+    return this;
+  }
+
+  virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
+                         CefRefPtr<CefFrame> frame,
+                         int httpStatusCode) override {
+    if (frame->IsMain()) {
+      std::string js = R"(
+        (function() {
+          function createUI() {
+            if (document.getElementById('hqxball-url-bar')) return;
+            
+            const container = document.createElement('div');
+            container.id = 'hqxball-url-bar';
+            container.style.cssText = 'position:fixed;top:-100px;left:50%;transform:translateX(-50%);z-index:999999;display:flex;align-items:center;background:rgba(20,20,20,0.8);backdrop-filter:blur(10px);padding:8px 15px;border-radius:20px;box-shadow:0 4px 15px rgba(0,0,0,0.3);transition:all 0.3s ease;opacity:0;';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Gitmek istediğiniz odanın linki...';
+            input.style.cssText = 'background:transparent;border:none;color:white;width:250px;font-family:sans-serif;font-size:14px;outline:none;';
+            
+            const btn = document.createElement('button');
+            btn.innerText = 'Git';
+            btn.style.cssText = 'background:#00d2ff;color:black;border:none;padding:5px 15px;border-radius:15px;cursor:pointer;font-weight:bold;margin-left:10px;';
+            
+            const toggleBtn = document.createElement('button');
+            toggleBtn.id = 'hqxball-url-toggle';
+            toggleBtn.innerText = '🔗 Oda Linki';
+            toggleBtn.style.cssText = 'position:fixed;top:10px;left:10px;z-index:999999;background:rgba(20,20,20,0.5);color:white;border:1px solid #333;padding:5px 10px;border-radius:10px;cursor:pointer;font-size:12px;font-family:sans-serif;transition:0.2s;';
+
+            let isVisible = false;
+
+            function toggle() {
+              isVisible = !isVisible;
+              container.style.top = isVisible ? '15px' : '-100px';
+              container.style.opacity = isVisible ? '1' : '0';
+              if(isVisible) setTimeout(() => input.focus(), 100);
+            }
+
+            function go() {
+              let url = input.value.trim();
+              if (!url) return;
+              
+              if (url.includes('hqxball.com/play?c=')) {
+                if (!url.startsWith('http')) {
+                  url = 'https://' + url;
+                }
+                window.location.href = url;
+              } else {
+                alert('Lütfen sadece Hqxball oda linklerini giriniz!\nÖrnek: https://www.hqxball.com/play?c=XptCDogQ');
+                input.value = '';
+                input.focus();
+              }
+            }
+
+            btn.onclick = go;
+            toggleBtn.onclick = toggle;
+            toggleBtn.onmouseover = () => toggleBtn.style.background = 'rgba(20,20,20,0.8)';
+            toggleBtn.onmouseout = () => toggleBtn.style.background = 'rgba(20,20,20,0.5)';
+            
+            input.onkeydown = (e) => {
+              if (e.key === 'Enter') go();
+              if (e.key === 'Escape') toggle();
+            };
+
+            container.appendChild(input);
+            container.appendChild(btn);
+            
+            // Wait for body to exist
+            const appendUI = () => {
+              if (document.body) {
+                if (!document.getElementById('hqxball-url-bar')) document.body.appendChild(container);
+                if (!document.getElementById('hqxball-url-toggle')) document.body.appendChild(toggleBtn);
+              } else {
+                setTimeout(appendUI, 100);
+              }
+            };
+            appendUI();
+          }
+          
+          createUI();
+          // Continuously check if the UI was removed by SPA navigation and recreate it
+          setInterval(() => {
+            if (document.body && (!document.getElementById('hqxball-url-bar') || !document.getElementById('hqxball-url-toggle'))) {
+              createUI();
+            }
+          }, 1000);
+        })();
+      )";
+      frame->ExecuteJavaScript(js, frame->GetURL(), 0);
+    }
   }
 
   virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) override {
@@ -154,12 +251,6 @@ public:
     command_line->AppendSwitch("disable-software-rasterizer");
     command_line->AppendSwitch("enable-hardware-overlays");
 
-    // Disable Safety Tip / Lookalike URL warning
-    command_line->AppendSwitchWithValue("disable-features", "LookalikeUrlNavigationSuggestionsUI");
-    
-    // Disable DevTools
-    command_line->AppendSwitch("disable-dev-tools");
-
     // Haxball relies on WebRTC, so we do not disable it.
   }
 
@@ -181,6 +272,15 @@ int main(int argc, char *argv[]) {
 
   CefSettings settings;
   settings.no_sandbox = true; // Required for simple Linux setups
+
+  // Explicitly set paths to avoid ICU and cache errors
+  char abs_path[4096];
+  if (realpath(".", abs_path) != nullptr) {
+      std::string base_dir(abs_path);
+      CefString(&settings.resources_dir_path).FromASCII(base_dir.c_str());
+      CefString(&settings.locales_dir_path).FromASCII((base_dir + "/locales").c_str());
+      CefString(&settings.root_cache_path).FromASCII((base_dir + "/cache").c_str());
+  }
 
   // Enable multi-threaded message loop for better performance if supported,
   // but on Linux standard message loop is typically required for Views.
