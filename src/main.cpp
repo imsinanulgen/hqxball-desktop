@@ -287,6 +287,11 @@ int main(int argc, char *argv[]) {
   CefSettings settings;
   settings.no_sandbox = true; // Required for simple Linux/Windows setups
 
+#if defined(__APPLE__)
+  // Helper App olmadan tek bir executable üzerinden render etmesini sağlıyoruz (Mac App Mimarisi Çökme Çözümü)
+  CefString(&settings.browser_subprocess_path).FromASCII(argv[0]);
+#endif
+
 #if !defined(_WIN32) && !defined(__APPLE__)
   // Explicitly set paths to avoid ICU and cache errors on Linux
   char abs_path[4096];
